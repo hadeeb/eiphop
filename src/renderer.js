@@ -10,14 +10,6 @@ let ipcRenderer = null;
 let pendingRequests = {};
 export {pendingRequests};
 
-const removePendingRequestId = (requestId) => {
-    pendingRequests = Object.keys(pendingRequests)
-        .filter(k => k !== requestId)
-        .map(k => ({[k]: pendingRequests[k]}))
-        .reduce((accumulator, current) => ({...accumulator, ...current}), {})
-    ;
-};
-
 const randomId = () => `${Date.now().toString(36)}${Math.random().toString(36).substr(2, 5)}`;
 
 // util method to resolve a promise from outside function scope
@@ -54,13 +46,13 @@ export const setupFrontendListener = (electronModule) => {
     // expect all responses on asyncResponse channel
     ipcRenderer.on('asyncResponse', (event, requestId, res) => {
         const {dfd} = pendingRequests[requestId];
-        removePendingRequestId(requestId);
+        delete pendingRequests[requestId];
         dfd.resolve(res);
     });
 
     ipcRenderer.on('errorResponse', (event, requestId, err) => {
         const {dfd} = pendingRequests[requestId];
-        removePendingRequestId(requestId);
+        delete pendingRequests[requestId];
         dfd.reject(err);
     });
 }
